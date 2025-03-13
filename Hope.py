@@ -1,6 +1,16 @@
 import pygame
 import random
-
+class Screen:
+	def __init__(self):
+		pygame.init()
+		self.grandscreen = pygame.display.set_mode((1000,800),pygame.RESIZABLE)
+		self.screen = pygame.Surface((64,32))
+		self.black = (0,0,0)
+		self.white = (255,255,255)
+		self.screen.fill(self.black)
+	def display(self):
+		self.grandscreen.blit(pygame.transform.scale(self.screen,(1000,800)),(0,0))
+		pygame.display.flip()
 class CHIP8:
 	def __init__(self,Rompath):
 		self.memoryCHIP = [0] * 4096
@@ -11,6 +21,7 @@ class CHIP8:
 		self.keys = [False for i in range(16)]
 		self.loadMemoryChip(Rompath)
 		self.loadFonts()
+		self.screen = Screen()
 	def loadFonts(self):
 		fonts =[
 			0xF0, 0x90, 0x90, 0x90, 0xF0, 	# 0
@@ -46,7 +57,7 @@ class CHIP8:
 		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
 		return (result)
 	def executeopcode(self,opcode):
-		
+		op1 = 45
 
 
 
@@ -54,3 +65,13 @@ main = CHIP8("Tetris [Fran Dachille, 1991].ch8")
 
 test1 = (main.opcode() & 0x00F0) >> 4
 print(f"{test1:0X}")
+running = True
+while running ==True:
+	#gestion de l'interuption de la boucle
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			running = False
+		elif event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_ESCAPE:
+				running = False
+	main.screen.display()
