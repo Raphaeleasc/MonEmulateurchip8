@@ -42,10 +42,15 @@ class CHIP8:
 		for i in range(0, len(self.memoryCHIP),2):
 			Text.write(f"0x{0x000+i:03X}: {self.memoryCHIP[i]<<8|self.memoryCHIP[i+1]:04X} \n")
 		Text.close()
-
-
+	def opcode(self):
+		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
+		return (result)
+	def executeopcode(self,opcode):
+		
 
 
 
 main = CHIP8("Tetris [Fran Dachille, 1991].ch8")
-main.decodeChip8()
+
+test1 = (main.opcode() & 0x00F0) >> 4
+print(f"{test1:0X}")
