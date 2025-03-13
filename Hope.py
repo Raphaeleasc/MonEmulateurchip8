@@ -11,6 +11,8 @@ class Screen:
 	def display(self):
 		self.grandscreen.blit(pygame.transform.scale(self.screen,(1000,800)),(0,0))
 		pygame.display.flip()
+	def clear(self):
+		self.screen.fill(self.black)
 class CHIP8:
 	def __init__(self,Rompath):
 		self.memoryCHIP = [0] * 4096
@@ -57,7 +59,18 @@ class CHIP8:
 		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
 		return (result)
 	def executeopcode(self,opcode):
-		op1 = 45
+		c1 = opcode & 0X00f
+		c2 = (opcode & 0X00F0) >>4
+		c3 = (opcode & 0X0F00) >>8
+		c4 = (opcode & 0XF000) >>12
+		if(c4 == 0):
+			if(c2 == 0XE and c1 == 0XE):
+				if(self.SP > 0):
+					self.PC = self.Stack[self.SP]
+					self.SP = self.SP-1
+			elif(c2 == 0XE):
+				self.screen.clear()
+
 
 
 
