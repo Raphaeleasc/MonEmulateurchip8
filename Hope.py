@@ -3,13 +3,13 @@ import random
 class Screen:
 	def __init__(self):
 		pygame.init()
-		self.grandscreen = pygame.display.set_mode((1000,800),pygame.RESIZABLE)
+		self.grandscreen = pygame.display.set_mode((640,320),pygame.RESIZABLE)
 		self.screen = pygame.Surface((64,32))
 		self.black = (0,0,0)
 		self.white = (255,255,255)
 		self.screen.fill(self.black)
 	def display(self):
-		self.grandscreen.blit(pygame.transform.scale(self.screen,(1000,800)),(0,0))
+		self.grandscreen.blit(pygame.transform.scale((self.screen),(640,320)),(0,0))
 		pygame.display.flip()
 	def clear(self):
 		self.screen.fill(self.black)
@@ -59,17 +59,70 @@ class CHIP8:
 		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
 		return (result)
 	def executeopcode(self,opcode):
-		c1 = opcode & 0X00f
+		c1 = opcode & 0X000F
 		c2 = (opcode & 0X00F0) >>4
 		c3 = (opcode & 0X0F00) >>8
 		c4 = (opcode & 0XF000) >>12
 		if(c4 == 0):
 			if(c2 == 0XE and c1 == 0XE):
 				if(self.SP > 0):
-					self.PC = self.Stack[self.SP]
 					self.SP = self.SP-1
+					self.PC = self.Stack[self.SP]
 			elif(c2 == 0XE):
 				self.screen.clear()
+		elif(c4 == 1 ):
+			self.PC = opcode & 0XF000
+		elif(c4 ==2):
+			if (self.SP<15):
+				self.Stack[self.SP] = self.PC
+				self.SP = self.SP+1
+				self.PC = opcode & 0XF000
+		elif(c4 == 3):
+			if (self.V[c3] == opcode&0X00FF):
+				self.PC = self.PC+2
+		elif(c4 == 4):
+			if(self.V[c3] != opcode&0X00FF):
+				self.PC = self.PC+2
+		elif(c4 == 5):
+			if(self.V[c3] == self.V[c2]):
+				self.PC = self.PC+2
+		elif(c4 == 6):
+			self.V[c3] = opcode&0X00FF
+		elif(c4 == 7):
+			self.V[c3] =  opcode&0X00FF + self.V[c3]
+		elif(c4 == 8):
+			match c1:
+				case 0:
+					self.V[c3] = self.V[c2]
+				case 1:
+					self.V[c3] |= self.V[c2]
+				case 2:
+					self.V[c3] &= self.V[c2]
+				case 3:
+					self.V[c3] ^= self.V[c2]
+				case 4:
+					self.V[15] = 0
+					if(self.V[c3]+self.V[c2] > 255):
+						self.V[15]=1
+					self.V[c3] += self.V[c2]
+				case 5:
+					self.V[15] = 0
+					if(self.V[c3]>self.V[c2]):
+						self.V[15]=1
+					self.V[c3] -= self.V[c2]
+				case 6:
+					self.V[15] = self.V[c3] & 0X1
+					self.V[c3] = (self.V[c3]>>1)
+				case 7:
+					self.V[15] = 0
+					if(self.V[c2]>self.V[c3]):
+						self.V[15] = 1
+					self.V[c3] = self.V[c2] - self.V[c3]
+				case 0XE:
+					pass
+
+			
+
 
 
 
