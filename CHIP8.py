@@ -1,5 +1,9 @@
 import pygame
 import random
+
+#Chemin de fichier a émuler
+PATH = "Tetris [Fran Dachille, 1991].ch8"
+
 class Screen:
 	def __init__(self):
 		pygame.init()
@@ -303,7 +307,7 @@ class CHIP8:
 
 
 
-main = CHIP8("Tetris [Fran Dachille, 1991].ch8")
+main = CHIP8(PATH)
 
 test1 = (main.opcode() & 0x00F0) >> 4
 print(f"{test1:0X}")
