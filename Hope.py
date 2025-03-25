@@ -127,7 +127,7 @@ class CHIP8:
 					self.V[c3] = self.V[c2] - self.V[c3]
 				case 0XE:
 					self.V[15] = self.V[c3]>>7
-					self.V[15] = self.V[c3]<<1
+					self.V[c3] = self.V[c3]<<1
 		elif(c4 == 0XA):
 			self.I = opcode & 0X0FFF
 		elif(c4==0XB):
@@ -135,7 +135,7 @@ class CHIP8:
 		elif(c4 == 0XC):
 			self.V[c3] = random.randint(0,255) & (opcode&0X00FF)
 		elif(c4 == 0XD):
-			self.draw(c3,c2,c1)
+			self.draw(self.V[c3],self.V[c2],c1)
 		elif(c4 == 0XE):
 			if (c2 == 0x9):
 				if(self.Keys[c3] == True):
@@ -171,7 +171,7 @@ class CHIP8:
 					for i in range(c3+1):
 						self.V[i] = self.memoryCHIP[self.I+i]
 		self.PC = self.PC+2
-
+		self.V[c3] = self.V[c3] % (2**8)
 	def keypressed(self):
 		Keypressed =False
 		while(Keypressed == False):
@@ -250,18 +250,18 @@ class CHIP8:
 		for i in range(c1):
 			bytes = self.memoryCHIP[self.I+i]
 			y = c2+i
-			if (y>self.screen.screen.get_height()):
+			if (y>=self.screen.screen.get_height()):
 					y -= self.screen.screen.get_height()
 			for t in range(8):
 				x = c3+t
-				if (x>self.screen.screen.get_width()):
+				if (x>=self.screen.screen.get_width()):
 					x -= self.screen.screen.get_width()
 				byte = (bytes & (0x1<<(7-t))) >>(7-t)
 				color = self.screen.screen.get_at((x, y))
 				if(color == self.screen.black):
-					color = 1
-				elif(color == self.screen.white):
 					color = 0
+				elif(color == self.screen.white):
+					color = 1
 				byte = color ^ byte
 				self.screen.screen.set_at((x,y),(255*byte,255*byte,255*byte))
 				if (color ==1 and byte == 1):
@@ -279,6 +279,7 @@ class CHIP8:
 						running = False
 				self.executeopcode(self.opcode())
 				self.screen.display()
+			pygame.time.delay(round(1/60)*1000)
 								
 
 
