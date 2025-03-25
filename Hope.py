@@ -21,7 +21,7 @@ class CHIP8:
 		self.SP = 0
 		self.I = 0
 		self.PC = 0x200
-		self.Keys = [False for i in range(16)]
+		self.Keys = [0 for i in range(16)]
 		self.loadMemoryChip(Rompath)
 		self.loadFonts()
 		self.screen = Screen()
@@ -62,11 +62,13 @@ class CHIP8:
 		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
 		return (result)
 	def executeopcode(self,opcode):
-		print(f"{opcode:0X}")
+		print(f"{self.PC:0X}:{opcode:0X}")
 		c1 = opcode & 0X000F
 		c2 = (opcode & 0X00F0) >>4
 		c3 = (opcode & 0X0F00) >>8
 		c4 = (opcode & 0XF000) >>12
+		self.V[c3] = self.V[c3] % (2**8)
+		self.V[c2] = self.V[c2] % (2**8)
 		match c4:
 			case 0:
 				if(c2 == 0XE and c1 == 0XE):
@@ -142,20 +144,23 @@ class CHIP8:
 				self.draw(self.V[c3],self.V[c2],c1)
 			case 0XE:
 				if (c2 == 0x9):
-					if(self.Keys[c3] == True):
+					if(self.Keys[c3] == 1):
 						self.PC += 2
 				elif(c2 == 0XA):
-					if(self.Keys[c3] == False):
+					if(self.Keys[c3] == 0):
 						self.PC+=2
 			case 0XF:
 				match opcode&0X00FF:
 					case 0X07:
 						self.V[c3] = self.DT
 					case 0X0A:
-						self.keypressed
-						for idx,val in enumerate(self.Keys):
-							if(val == True):
-								self.V[c3] = idx
+						wait = 0
+						while wait == 1:
+							self.keypressed()
+							for idx,val in enumerate(self.Keys):
+								if(val == 1):
+									self.V[c3] = idx
+									wait = 1
 					case 0X15:
 						self.DT = c3
 					case 0X18:
@@ -175,78 +180,84 @@ class CHIP8:
 						for i in range(c3+1):
 							self.V[i] = self.memoryCHIP[self.I+i]
 		self.PC = self.PC+2
-		self.V[c3] = self.V[c3] % (2**8)
 	def keypressed(self):
-		Keypressed =False
-		while(Keypressed == False):
-			for event in pygame.event.get():
-				if event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_1:
-						self.Keys[0x1] = 1
-					elif event.key == pygame.K_2:
-						self.Keys[0x2] = 1
-					elif event.key == pygame.K_3:
-						self.Keys[0x3] = 1
-					elif event.key == pygame.K_4:
-						self.Keys[0xC] = 1
-					elif event.key == pygame.K_q:
-						self.Keys[0x4] = 1
-					elif event.key == pygame.K_w:
-						self.Keys[0x5] = 1
-					elif event.key == pygame.K_e:
-						self.Keys[0x6] = 1
-					elif event.key == pygame.K_r:
-						self.Keys[0xD] = 1
-					elif event.key == pygame.K_a:
-						self.Keys[0x7] = 1
-					elif event.key == pygame.K_s:
-						self.Keys[0x8] = 1
-					elif event.key == pygame.K_d:
-						self.Keys[0x9] = 1
-					elif event.key == pygame.K_f:
-						self.Keys[0xE] = 1
-					elif event.key == pygame.K_z:
-						self.Keys[0xA] = 1
-					elif event.key == pygame.K_x:
-						self.Keys[0x0] = 1
-					elif event.key == pygame.K_c:
-						self.Keys[0xB] = 1
-					elif event.key == pygame.K_v:
-						self.Keys[0xF] = 1
-					Keypressed = True
-				elif event.type == pygame.KEYUP:
-					if event.key == pygame.K_1:
-						self.Keys[0x1] = 0
-					elif event.key == pygame.K_2:
-						self.Keys[0x2] = 0
-					elif event.key == pygame.K_3:
-						self.Keys[0x3] = 0
-					elif event.key == pygame.K_4:
-						self.Keys[0xC] = 0
-					elif event.key == pygame.K_q:
-						self.Keys[0x4] = 0
-					elif event.key == pygame.K_w:
-						self.Keys[0x5] = 0
-					elif event.key == pygame.K_e:
-						self.Keys[0x6] = 0
-					elif event.key == pygame.K_r:
-						self.Keys[0xD] = 0
-					elif event.key == pygame.K_a:
-						self.Keys[0x7] = 0
-					elif event.key == pygame.K_s:
-						self.Keys[0x8] = 0
-					elif event.key == pygame.K_d:
-						self.Keys[0x9] = 0
-					elif event.key == pygame.K_f:
-						self.Keys[0xE] = 0
-					elif event.key == pygame.K_z:
-						self.Keys[0xA] = 0
-					elif event.key == pygame.K_x:
-						self.Keys[0x0] = 0
-					elif event.key == pygame.K_c:
-						self.Keys[0xB] = 0
-					elif event.key == pygame.K_v:
-						self.Keys[0xF] = 0
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				self.running = False
+			elif event.type == self.DELAYSOUNDTIMER:
+				if self.ST>0:
+					self.ST -= 1
+				if self.DT > 0:
+					self.DT -=1
+			elif event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_ESCAPE:
+					self.running = False
+			if event.type == pygame.KEYDOWN:
+				if event.key == pygame.K_1:
+					self.Keys[0x1] = 1
+				elif event.key == pygame.K_2:
+					self.Keys[0x2] = 1
+				elif event.key == pygame.K_3:
+					self.Keys[0x3] = 1
+				elif event.key == pygame.K_4:
+					self.Keys[0xC] = 1
+				elif event.key == pygame.K_q:
+					self.Keys[0x4] = 1
+				elif event.key == pygame.K_w:
+					self.Keys[0x5] = 1
+				elif event.key == pygame.K_e:
+					self.Keys[0x6] = 1
+				elif event.key == pygame.K_r:
+					self.Keys[0xD] = 1
+				elif event.key == pygame.K_a:
+					self.Keys[0x7] = 1
+				elif event.key == pygame.K_s:
+					self.Keys[0x8] = 1
+				elif event.key == pygame.K_d:
+					self.Keys[0x9] = 1
+				elif event.key == pygame.K_f:
+					self.Keys[0xE] = 1
+				elif event.key == pygame.K_z:
+					self.Keys[0xA] = 1
+				elif event.key == pygame.K_x:
+					self.Keys[0x0] = 1
+				elif event.key == pygame.K_c:
+					self.Keys[0xB] = 1
+				elif event.key == pygame.K_v:
+					self.Keys[0xF] = 1
+			elif event.type == pygame.KEYUP:
+				if event.key == pygame.K_1:
+					self.Keys[0x1] = 0
+				elif event.key == pygame.K_2:
+					self.Keys[0x2] = 0
+				elif event.key == pygame.K_3:
+					self.Keys[0x3] = 0
+				elif event.key == pygame.K_4:
+					self.Keys[0xC] = 0
+				elif event.key == pygame.K_q:
+					self.Keys[0x4] = 0
+				elif event.key == pygame.K_w:
+					self.Keys[0x5] = 0
+				elif event.key == pygame.K_e:
+					self.Keys[0x6] = 0
+				elif event.key == pygame.K_r:
+					self.Keys[0xD] = 0
+				elif event.key == pygame.K_a:
+					self.Keys[0x7] = 0
+				elif event.key == pygame.K_s:
+					self.Keys[0x8] = 0
+				elif event.key == pygame.K_d:
+					self.Keys[0x9] = 0
+				elif event.key == pygame.K_f:
+					self.Keys[0xE] = 0
+				elif event.key == pygame.K_z:
+					self.Keys[0xA] = 0
+				elif event.key == pygame.K_x:
+					self.Keys[0x0] = 0
+				elif event.key == pygame.K_c:
+					self.Keys[0xB] = 0
+				elif event.key == pygame.K_v:
+					self.Keys[0xF] = 0
 
 
 	def draw(self,c3,c2,c1):
@@ -266,28 +277,18 @@ class CHIP8:
 					color = 0
 				elif(color == self.screen.white):
 					color = 1
-				byte = color ^ byte
-				self.screen.screen.set_at((x,y),(255*byte,255*byte,255*byte))
 				if (color ==1 and byte == 1):
 					self.V[15] =1
+				byte = color ^ byte
+				self.screen.screen.set_at((x,y),(255*byte,255*byte,255*byte))
 	def Mainchip8(self):
 		clock = pygame.time.Clock()
-		running = True
-		DELAYSOUNDTIMER = 1
-		pygame.time.set_timer(DELAYSOUNDTIMER, round((1/60)*1000))
-		while running ==True:
+		self.running = True
+		self.DELAYSOUNDTIMER = 1
+		pygame.time.set_timer(self.DELAYSOUNDTIMER, round((1/60)*1000))
+		while self.running ==True:
 		#gestion de l'interuption de la boucle
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					running = False
-				elif event.type == DELAYSOUNDTIMER:
-					if self.ST>0:
-						self.ST -= 0
-					if self.DT > 0:
-						self.DT -=0
-				elif event.type == pygame.KEYDOWN:
-					if event.key == pygame.K_ESCAPE:
-						running = False
+			self.keypressed()
 			self.executeopcode(self.opcode())
 			self.screen.display()
 			pygame.time.delay(round(1/60)*1000)
