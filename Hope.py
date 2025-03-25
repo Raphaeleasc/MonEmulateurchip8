@@ -67,109 +67,113 @@ class CHIP8:
 		c2 = (opcode & 0X00F0) >>4
 		c3 = (opcode & 0X0F00) >>8
 		c4 = (opcode & 0XF000) >>12
-		if(c4 == 0):
-			if(c2 == 0XE and c1 == 0XE):
-				if(self.SP > 0):
-					self.SP = self.SP-1
-					self.PC = self.Stack[self.SP]
-			elif(c2 == 0XE):
-				self.screen.clear()
-		elif(c4 == 1 ):
-			self.PC = opcode & 0X0FFF
-			self.PC -= 2
-		elif(c4 ==2):
-			if (self.SP<15):
-				self.Stack[self.SP] = self.PC
-				self.SP = self.SP+1
+		match c4:
+			case 0:
+				if(c2 == 0XE and c1 == 0XE):
+					if(self.SP > 0):
+						self.SP = self.SP-1
+						self.PC = self.Stack[self.SP]
+				elif(c2 == 0XE):
+					self.screen.clear()
+			case 1:
 				self.PC = opcode & 0X0FFF
-				self.PC -=2
-		elif(c4 == 3):
-			if (self.V[c3] == opcode&0X00FF):
-				self.PC = self.PC+2
-		elif(c4 == 4):
-			if(self.V[c3] != opcode&0X00FF):
-				self.PC = self.PC+2
-		elif(c4 == 5):
-			if(self.V[c3] == self.V[c2]):
-				self.PC = self.PC+2
-		elif(c4 == 6):
-			self.V[c3] = (opcode&0X00FF)
-		elif(c4 == 7):
-			self.V[c3] =  (opcode&0X00FF) + self.V[c3]
-			print(self.V[c3])
-		elif(c4 == 8):
-			match c1:
-				case 0:
-					self.V[c3] = self.V[c2]
-				case 1:
-					self.V[c3] |= self.V[c2]
-				case 2:
-					self.V[c3] &= self.V[c2]
-				case 3:
-					self.V[c3] ^= self.V[c2]
-				case 4:
-					self.V[15] = 0
-					if(self.V[c3]+self.V[c2] > 255):
-						self.V[15]=1
-					self.V[c3] += self.V[c2]
-				case 5:
-					self.V[15] = 0
-					if(self.V[c3]>self.V[c2]):
-						self.V[15]=1
-					self.V[c3] -= self.V[c2]
-				case 6:
-					self.V[15] = self.V[c3] & 0X1
-					self.V[c3] = (self.V[c3]>>1)
-				case 7:
-					self.V[15] = 0
-					if(self.V[c2]>self.V[c3]):
-						self.V[15] = 1
-					self.V[c3] = self.V[c2] - self.V[c3]
-				case 0XE:
-					self.V[15] = self.V[c3]>>7
-					self.V[c3] = self.V[c3]<<1
-		elif(c4 == 0XA):
-			self.I = opcode & 0X0FFF
-		elif(c4==0XB):
-			self.PC = (opcode & 0X0FFF)+self.V[0]
-		elif(c4 == 0XC):
-			self.V[c3] = random.randint(0,255) & (opcode&0X00FF)
-		elif(c4 == 0XD):
-			self.draw(self.V[c3],self.V[c2],c1)
-		elif(c4 == 0XE):
-			if (c2 == 0x9):
-				if(self.Keys[c3] == True):
-					self.PC += 2
-			elif(c2 == 0XA):
-				if(self.Keys[c3] == False):
-					self.PC+=2
-		elif(c4 ==0XF):
-			match opcode&0X00FF:
-				case 0X07:
-					self.V[c3] = self.DT
-				case 0X0A:
-					self.keypressed
-					for idx,val in enumerate(self.Keys):
-						if(val == True):
-							self.V[c3] = idx
-				case 0X15:
-					self.DT = c3
-				case 0X18:
-					self.ST = c3
-				case 0X1E:
-					self.I+=self.V[c3]
-				case 0X29:
-					self.I= c3*5
-				case 0X33:
-					self.memoryCHIP[self.I] = self.V[c3] // 100 													
-					self.memoryCHIP[self.I+1] = (self.V[c3] - (self.memoryCHIP[self.I] * 100)) // 10 					
-					self.memoryCHIP[self.I+2] = self.V[c3] - self.memoryCHIP[self.I]*100 - self.memoryCHIP[self.I+1]*10
-				case 0X55:
-					for i in range(c3+1):
-						self.memoryCHIP[self.I+i]=self.V[i]
-				case 0X65:
-					for i in range(c3+1):
-						self.V[i] = self.memoryCHIP[self.I+i]
+				self.PC -= 2
+			case 2:
+				if (self.SP<15):
+					self.Stack[self.SP] = self.PC
+					self.SP = self.SP+1
+					self.PC = opcode & 0X0FFF
+					self.PC -=2
+			case 3:
+				if (self.V[c3] == opcode&0X00FF):
+					self.PC = self.PC+2
+			case 4:
+				if(self.V[c3] != opcode&0X00FF):
+					self.PC = self.PC+2
+			case 5:
+				if(self.V[c3] == self.V[c2]):
+					self.PC = self.PC+2
+			case 6:
+				self.V[c3] = (opcode&0X00FF)
+			case 7:
+				self.V[c3] =  (opcode&0X00FF) + self.V[c3]
+				print(self.V[c3])
+			case 8:
+				match c1:
+					case 0:
+						self.V[c3] = self.V[c2]
+					case 1:
+						self.V[c3] |= self.V[c2]
+					case 2:
+						self.V[c3] &= self.V[c2]
+					case 3:
+						self.V[c3] ^= self.V[c2]
+					case 4:
+						self.V[15] = 0
+						if(self.V[c3]+self.V[c2] > 255):
+							self.V[15]=1
+						self.V[c3] += self.V[c2]
+					case 5:
+						self.V[15] = 0
+						if(self.V[c3]>self.V[c2]):
+							self.V[15]=1
+						self.V[c3] -= self.V[c2]
+					case 6:
+						self.V[15] = self.V[c3] & 0X1
+						self.V[c3] = (self.V[c3]>>1)
+					case 7:
+						self.V[15] = 0
+						if(self.V[c2]>self.V[c3]):
+							self.V[15] = 1
+						self.V[c3] = self.V[c2] - self.V[c3]
+					case 0XE:
+						self.V[15] = self.V[c3]>>7
+						self.V[c3] = self.V[c3]<<1
+			case 9:
+				if(self.V[c3] != self.V[c2]):
+					self.PC = self.PC+2	
+			case 0XA:
+				self.I = opcode & 0X0FFF
+			case 0XB:
+				self.PC = (opcode & 0X0FFF)+self.V[0]
+			case 0XC:
+				self.V[c3] = random.randint(0,255) & (opcode&0X00FF)
+			case 0XD:
+				self.draw(self.V[c3],self.V[c2],c1)
+			case 0XE:
+				if (c2 == 0x9):
+					if(self.Keys[c3] == True):
+						self.PC += 2
+				elif(c2 == 0XA):
+					if(self.Keys[c3] == False):
+						self.PC+=2
+			case 0XF:
+				match opcode&0X00FF:
+					case 0X07:
+						self.V[c3] = self.DT
+					case 0X0A:
+						self.keypressed
+						for idx,val in enumerate(self.Keys):
+							if(val == True):
+								self.V[c3] = idx
+					case 0X15:
+						self.DT = c3
+					case 0X18:
+						self.ST = c3
+					case 0X1E:
+						self.I+=self.V[c3]
+					case 0X29:
+						self.I= c3*5
+					case 0X33:
+						self.memoryCHIP[self.I] = self.V[c3] // 100 													
+						self.memoryCHIP[self.I+1] = (self.V[c3] - (self.memoryCHIP[self.I] * 100)) // 10 					
+						self.memoryCHIP[self.I+2] = self.V[c3] - self.memoryCHIP[self.I]*100 - self.memoryCHIP[self.I+1]*10
+					case 0X55:
+						for i in range(c3+1):
+							self.memoryCHIP[self.I+i]=self.V[i]
+					case 0X65:
+						for i in range(c3+1):
+							self.V[i] = self.memoryCHIP[self.I+i]
 		self.PC = self.PC+2
 		self.V[c3] = self.V[c3] % (2**8)
 	def keypressed(self):
@@ -269,16 +273,23 @@ class CHIP8:
 	def Mainchip8(self):
 		clock = pygame.time.Clock()
 		running = True
+		DELAYSOUNDTIMER = 1
+		pygame.time.set_timer(DELAYSOUNDTIMER, round((1/60)*1000))
 		while running ==True:
 		#gestion de l'interuption de la boucle
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
 					running = False
+				elif event.type == DELAYSOUNDTIMER:
+					if self.ST>0:
+						self.ST -= 0
+					if self.DT > 0:
+						self.DT -=0
 				elif event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_ESCAPE:
 						running = False
-				self.executeopcode(self.opcode())
-				self.screen.display()
+			self.executeopcode(self.opcode())
+			self.screen.display()
 			pygame.time.delay(round(1/60)*1000)
 								
 
