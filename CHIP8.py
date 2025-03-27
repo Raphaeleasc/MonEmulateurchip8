@@ -1,20 +1,53 @@
-import pygame
+import pygame as pg
 import random
 
 #Chemin de fichier a émuler
-PATH = "games\Tank.ch8"
+PATH = "Tetris [Fran Dachille, 1991].ch8"
 
 class Screen:
 	def __init__(self):
-		self.sound = pygame.mixer.Sound("hey_listen.wav")
-		self.grandscreen = pygame.display.set_mode((640,320),pygame.RESIZABLE)
-		self.screen = pygame.Surface((64,32))
+		self.sound = pg.mixer.Sound("hey_listen.wav")
+		self.grandscreen = pg.display.set_mode((860,320),pg.RESIZABLE)
+		self.screen = pg.Surface((64,32))
+		self.virtualpad = pg.Surface((220,320))
 		self.black = (0,0,0)
 		self.white = (255,255,255)
 		self.screen.fill(self.black)
+		self.virtualpad.fill(self.white)
+		self.font = pg.font.SysFont("arial",32)
+		self.keys = {
+			"1" : pg.K_1,
+			"2" : pg.K_2,
+			"3" : pg.K_3,
+			"4" : pg.K_4,
+			"a" : pg.K_a,
+			"z" : pg.K_z,
+			"e" : pg.K_e,
+			"r" : pg.K_r,
+			"q" : pg.K_q,
+			"s" : pg.K_s,
+			"d" : pg.K_d,
+			"f" : pg.K_f,
+			"w" : pg.K_w,
+			"x" : pg.K_x,
+			"c" : pg.K_c,
+			"v" : pg.K_v,
+		}
+		self.Virtualrect = [pg.Rect(0,0,0,0)]*16
+
+	def updatvirtualpad(self):
+		for i,(k,v) in enumerate(self.keys.items()):
+				virtualbutton = pg.Surface((55,80))
+				text = self.font.render(k,True,self.white)
+				virtualbutton.blit(text,(55/2-text.get_width()/2,0))
+				text = self.font.render(pg.key.name(v),True,self.white)
+				virtualbutton.blit(text,(55/2-text.get_width()/2,32))
+				self.Virtualrect[i] = self.virtualpad.blit(virtualbutton,(55*(i%4),80*(i//4)))
 	def display(self):
-		self.grandscreen.blit(pygame.transform.scale((self.screen),(640,320)),(0,0))
-		pygame.display.flip()
+		self.updatvirtualpad()
+		self.grandscreen.blit(pg.transform.scale((self.screen),(640,320)),(0,0))
+		self.grandscreen.blit(self.virtualpad,(640,0))
+		pg.display.flip()
 	def clear(self):
 		self.screen.fill(self.black)
 class CHIP8:
@@ -31,6 +64,7 @@ class CHIP8:
 		self.screen = Screen()
 		self.DT = 0
 		self.ST = 0
+		self.clock = pg.time.Clock()
 	def loadFonts(self):
 		fonts =[
 			0xF0, 0x90, 0x90, 0x90, 0xF0, 	# 0
@@ -183,8 +217,8 @@ class CHIP8:
 							self.V[i] = self.memoryCHIP[self.I+i]
 		self.PC = self.PC+2
 	def listen(self):
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
+		for event in pg.event.get():
+			if event.type == pg.QUIT:
 				self.running = False
 			elif event.type == self.DELAYSOUNDTIMER:
 				if self.ST>0:
@@ -192,80 +226,25 @@ class CHIP8:
 				self.playSound()
 				if self.DT > 0:
 					self.DT -=1
-			elif event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_ESCAPE:
+			elif event.type == pg.KEYDOWN:
+				if event.key == pg.K_ESCAPE:
 					self.running = False
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_1:
-					self.Keys[0x1] = 1
-				elif event.key == pygame.K_2:
-					self.Keys[0x2] = 1
-				elif event.key == pygame.K_3:
-					self.Keys[0x3] = 1
-				elif event.key == pygame.K_4:
-					self.Keys[0xC] = 1
-				elif event.key == pygame.K_q:
-					self.Keys[0x4] = 1
-				elif event.key == pygame.K_w:
-					self.Keys[0x5] = 1
-				elif event.key == pygame.K_e:
-					self.Keys[0x6] = 1
-				elif event.key == pygame.K_r:
-					self.Keys[0xD] = 1
-				elif event.key == pygame.K_a:
-					self.Keys[0x7] = 1
-				elif event.key == pygame.K_s:
-					self.Keys[0x8] = 1
-				elif event.key == pygame.K_d:
-					self.Keys[0x9] = 1
-				elif event.key == pygame.K_f:
-					self.Keys[0xE] = 1
-				elif event.key == pygame.K_z:
-					self.Keys[0xA] = 1
-				elif event.key == pygame.K_x:
-					self.Keys[0x0] = 1
-				elif event.key == pygame.K_c:
-					self.Keys[0xB] = 1
-				elif event.key == pygame.K_v:
-					self.Keys[0xF] = 1
-			elif event.type == pygame.KEYUP:
-				if event.key == pygame.K_1:
-					self.Keys[0x1] = 0
-				elif event.key == pygame.K_2:
-					self.Keys[0x2] = 0
-				elif event.key == pygame.K_3:
-					self.Keys[0x3] = 0
-				elif event.key == pygame.K_4:
-					self.Keys[0xC] = 0
-				elif event.key == pygame.K_q:
-					self.Keys[0x4] = 0
-				elif event.key == pygame.K_w:
-					self.Keys[0x5] = 0
-				elif event.key == pygame.K_e:
-					self.Keys[0x6] = 0
-				elif event.key == pygame.K_r:
-					self.Keys[0xD] = 0
-				elif event.key == pygame.K_a:
-					self.Keys[0x7] = 0
-				elif event.key == pygame.K_s:
-					self.Keys[0x8] = 0
-				elif event.key == pygame.K_d:
-					self.Keys[0x9] = 0
-				elif event.key == pygame.K_f:
-					self.Keys[0xE] = 0
-				elif event.key == pygame.K_z:
-					self.Keys[0xA] = 0
-				elif event.key == pygame.K_x:
-					self.Keys[0x0] = 0
-				elif event.key == pygame.K_c:
-					self.Keys[0xB] = 0
-				elif event.key == pygame.K_v:
-					self.Keys[0xF] = 0
+			keys = pg.key.get_pressed()
+			for i, l in enumerate("1234azerqsdfwxcv"):
+				self.Keys[i] = keys[self.screen.keys[l]]
+			if pg.mouse.get_pressed()[0]:
+				x,y = pg.mouse.get_pos()
+				collide = pg.Rect((x-self.screen.screen.get_width()*10,y),(1,1)).collidelist(self.screen.Virtualrect)
+				print(self.screen.Virtualrect)
+				if collide != -1:
+					while not (e:=pg.event.get(pg.KEYUP)): pass
+					self.screen.keys["1234azerqsdfwxcv"[collide]] = e[0].key
+				
 
 	def playSound(self):
-		if pygame.mixer.get_busy() and self.ST<=0:
+		if pg.mixer.get_busy() and self.ST<=0:
 			self.screen.sound.stop()
-		elif not pygame.mixer.get_busy() and self.ST>0:
+		elif not pg.mixer.get_busy() and self.ST>0:
 			self.screen.sound.play(-1)
 
 	def draw(self,c3,c2,c1):
@@ -288,16 +267,15 @@ class CHIP8:
 				byte = color ^ byte
 				self.screen.screen.set_at((x,y),(255*byte,255*byte,255*byte))
 	def Mainchip8(self):
-		clock = pygame.time.Clock()
 		self.running = True
 		self.DELAYSOUNDTIMER = 1
-		pygame.time.set_timer(self.DELAYSOUNDTIMER, round((1/60)*1000))
+		pg.time.set_timer(self.DELAYSOUNDTIMER, round((1/60)*1000))
 		while self.running ==True:
 		#gestion de l'interuption de la boucle
 			self.listen()
 			self.executeopcode(self.opcode())
 			self.screen.display()
-			pygame.time.delay(round(1/60)*1000)
+			self.clock.tick(60*8)
 								
 
 
@@ -309,7 +287,7 @@ class CHIP8:
 
 
 
-pygame.init()
+pg.init()
 main = CHIP8(PATH)
 
 main.Mainchip8()
