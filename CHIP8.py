@@ -2,11 +2,11 @@ import pygame
 import random
 
 #Chemin de fichier a émuler
-PATH = "Tetris [Fran Dachille, 1991].ch8"
+PATH = "games\Tank.ch8"
 
 class Screen:
 	def __init__(self):
-		pygame.init()
+		self.sound = pygame.mixer.Sound("hey_listen.wav")
 		self.grandscreen = pygame.display.set_mode((640,320),pygame.RESIZABLE)
 		self.screen = pygame.Surface((64,32))
 		self.black = (0,0,0)
@@ -66,7 +66,6 @@ class CHIP8:
 		result = self.memoryCHIP[self.PC]<<8|self.memoryCHIP[self.PC+1]
 		return (result)
 	def executeopcode(self,opcode):
-		print(f"{self.PC:0X}:{opcode:0X}")
 		c1 = opcode & 0X000F
 		c2 = (opcode & 0X00F0) >>4
 		c3 = (opcode & 0X0F00) >>8
@@ -103,7 +102,6 @@ class CHIP8:
 				self.V[c3] = (opcode&0X00FF)
 			case 7:
 				self.V[c3] =  (opcode&0X00FF) + self.V[c3]
-				print(self.V[c3])
 			case 8:
 				match c1:
 					case 0:
@@ -160,7 +158,7 @@ class CHIP8:
 					case 0X0A:
 						wait = 0
 						while wait == 1:
-							self.keypressed()
+							self.listen()
 							for idx,val in enumerate(self.Keys):
 								if(val == 1):
 									self.V[c3] = idx
@@ -184,13 +182,14 @@ class CHIP8:
 						for i in range(c3+1):
 							self.V[i] = self.memoryCHIP[self.I+i]
 		self.PC = self.PC+2
-	def keypressed(self):
+	def listen(self):
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				self.running = False
 			elif event.type == self.DELAYSOUNDTIMER:
 				if self.ST>0:
 					self.ST -= 1
+				self.playSound()
 				if self.DT > 0:
 					self.DT -=1
 			elif event.type == pygame.KEYDOWN:
@@ -263,18 +262,21 @@ class CHIP8:
 				elif event.key == pygame.K_v:
 					self.Keys[0xF] = 0
 
+	def playSound(self):
+		if pygame.mixer.get_busy() and self.ST<=0:
+			self.screen.sound.stop()
+		elif not pygame.mixer.get_busy() and self.ST>0:
+			self.screen.sound.play(-1)
 
 	def draw(self,c3,c2,c1):
 		self.V[15] = 0
 		for i in range(c1):
 			bytes = self.memoryCHIP[self.I+i]
 			y = c2+i
-			if (y>=self.screen.screen.get_height()):
-					y -= self.screen.screen.get_height()
+			y %= self.screen.screen.get_height()
 			for t in range(8):
 				x = c3+t
-				if (x>=self.screen.screen.get_width()):
-					x -= self.screen.screen.get_width()
+				x %= self.screen.screen.get_width()
 				byte = (bytes & (0x1<<(7-t))) >>(7-t)
 				color = self.screen.screen.get_at((x, y))
 				if(color == self.screen.black):
@@ -292,7 +294,7 @@ class CHIP8:
 		pygame.time.set_timer(self.DELAYSOUNDTIMER, round((1/60)*1000))
 		while self.running ==True:
 		#gestion de l'interuption de la boucle
-			self.keypressed()
+			self.listen()
 			self.executeopcode(self.opcode())
 			self.screen.display()
 			pygame.time.delay(round(1/60)*1000)
@@ -307,12 +309,7 @@ class CHIP8:
 
 
 
+pygame.init()
 main = CHIP8(PATH)
 
-test1 = (main.opcode() & 0x00F0) >> 4
-print(f"{test1:0X}")
 main.Mainchip8()
-vx = 0XEE >> 7
-vy = 127 <<1
-print(f"{vx}")
-print(f"{vy}")
