@@ -71,6 +71,8 @@ bouton_options_rect = pygame.Rect(bouton_options_x, bouton_options_y, bouton_lar
 bouton_options_texte = "Lancer"
 bouton_couleur = GRIS
 
+#Definir le Fichier
+Fichier = ""
 ###############################  BOUCLE, EVENEMENTS  ###############################
 
 # Boucle principale
@@ -92,7 +94,6 @@ while en_cour:
     texte_surface = font.render(bouton_options_texte, True, NOIR)
     texte_rect = texte_surface.get_rect(center=bouton_options_rect.center)
     ecran.blit(texte_surface, texte_rect)
-
     # Gestion des événements
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -105,9 +106,10 @@ while en_cour:
             if bouton_fichier_rect.collidepoint(souris_pos):  # Vérifier si le clic est sur le bouton
                 fichier = ouvrir_boite_dialogue()
                 if fichier:
-                    chip = chp8.CHIP8(fichier)
-
-                elif bouton_options_rect.collidepoint(souris_pos):  # Vérifier si le clic est sur le deuxième bouton
+                    Fichier = fichier
+                    print(Fichier)
+            if bouton_options_rect.collidepoint(souris_pos) and Fichier!="*.ch8":  # Vérifier si le clic est sur le deuxième bouton
+                    chip = chp8.CHIP8(Fichier)
                     chip.Mainchip8()
     # Mettre à jour la fenêtre
     pygame.display.flip()

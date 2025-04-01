@@ -231,7 +231,6 @@ class CHIP8:
 			
 			# Vérifier si le clic est dans un rectangle virtuel
 			collide = pg.Rect((x - self.screen.screen.get_width() * 10, y), (1, 1)).collidelist(self.screen.Virtualrect)
-			print(self.screen.Virtualrect)  # Debug : afficher la liste des rectangles virtuels
 
 			if collide != -1:
 				while not (e := pg.event.get(pg.KEYUP)):  # Attendre qu’une touche soit relâchée
