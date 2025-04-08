@@ -165,9 +165,9 @@ class CHIP8:
 
 			case 0xE:
 				# Gestion des touches
-				if c2 == 0x9 and self.Keys[c3] == 1:  # EX9E : Sauter si touche pressée
+				if c2 == 0x9 and self.Keys[self.V[c3]] == True:  # EX9E : Sauter si touche pressée
 					self.PC += 2
-				elif c2 == 0xA and self.Keys[c3] == 0:  # EXA1 : Sauter si touche non pressée
+				elif c2 == 0xA and self.Keys[self.V[c3]] == False:  # EXA1 : Sauter si touche non pressée
 					self.PC += 2
 
 			case 0xF:
@@ -175,13 +175,13 @@ class CHIP8:
 				match opcode & 0X00FF:
 					case 0x07: self.V[c3] = self.DT          # FX07 : Lire la valeur du timer de retard
 					case 0x0A:                                # FX0A : Attente de pression d'une touche
-						wait = 0
+						wait = 1
 						while wait == 1:
 							self.listen()
 							for idx, val in enumerate(self.Keys):
-								if val == 1:
+								if val == True:
 									self.V[c3] = idx
-									wait = 1
+									wait = 0
 					case 0x15: self.DT = c3                  # FX15 : Définir le timer de retard
 					case 0x18: self.ST = c3                  # FX18 : Définir le timer de son
 					case 0x1E: self.I += self.V[c3]          # FX1E : Ajouter V[X] à I
